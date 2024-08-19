@@ -30,7 +30,7 @@ const ExploreRecipes = () => {
   useEffect(() => {
     const fetchRecipes = async () => {
       try {
-        const response = await api.get('/api/recipes');
+        const response = await api.get('/recipes');
         setRecipes(response.data);
       } catch (error) {
         console.error('Error fetching recipes:', error);

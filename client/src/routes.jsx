@@ -14,16 +14,16 @@ import ErrorPage from "./pages/ErrorPage/ErrorPage";
 import AdminDashboard from "./pages/Admin/AdminDashboard";
 
 const ProtectedRoute = ({ children }) => {
-  const { isAuthenticated, loading } = useAuth();
-  if (loading) return <div>Loading...</div>;
+  // Replace this with your authentication logic
+  const isAuthenticated = localStorage.getItem('token') !== null;
   return isAuthenticated ? children : <Navigate to="/login" replace />;
 };
 
 const AdminRoute = ({ children }) => {
-  const { isAuthenticated, user, loading } = useAuth();
-  if (loading) return <div>Loading...</div>;
-  const isAdmin = isAuthenticated && user?.role === 'admin';
-  return isAdmin ? children : <Navigate to="/" replace />;
+  // Replace this with your admin authentication logic
+  const isAuthenticated = localStorage.getItem('token') !== null;
+  const isAdmin = localStorage.getItem('userRole') === 'admin';
+  return isAuthenticated && isAdmin ? children : <Navigate to="/" replace />;
 };
 
 const routes = [
