@@ -1,7 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import api from '../../api';
-import { FaClock, FaUtensils, FaUsers, FaStar, FaBookmark } from "react-icons/fa";
+import {
+  FaClock,
+  FaUtensils,
+  FaUsers,
+  FaStar,
+  FaBookmark,
+} from "react-icons/fa";
 
 const RecipeInfo = () => {
   const { recipeId } = useParams();
@@ -10,6 +16,7 @@ const RecipeInfo = () => {
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [comments, setComments] = useState([]);
   const [comment, setComment] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchRecipe = async () => {
@@ -20,13 +27,20 @@ const RecipeInfo = () => {
         setIsBookmarked(response.data.isBookmarked || false);
       } catch (error) {
         console.error('Error fetching recipe:', error);
+      } finally {
+        setIsLoading(false);
       }
     };
     fetchRecipe();
   }, [recipeId]);
 
-  const handleRating = (newRating) => {
-    setRating(newRating);
+  const handleRating = async (newRating) => {
+    try {
+      await api.post(`/api/recipes/${recipeId}/rate`, { rating: newRating });
+      setRating(newRating);
+    } catch (error) {
+      console.error('Error rating recipe:', error);
+    }
   };
 
   const handleBookmark = async () => {
@@ -59,6 +73,13 @@ const RecipeInfo = () => {
     }
   };
 
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  if (!recipe) {
+    return <div>Recipe not found</div>;
+  }
 
   return (
     <div className="bg-gradient-to-r from-blue-100 to-green-100 min-h-screen py-12">
@@ -99,7 +120,7 @@ const RecipeInfo = () => {
               <div className="flex flex-col items-center">
                 <FaUsers className="text-2xl mb-2 text-purple-500" />
                 <span className="font-semibold">
-                  {recipe.number_of_people_served} Serves
+                  {recipe.servings} Serves
                 </span>
               </div>
             </div>
@@ -137,14 +158,14 @@ const RecipeInfo = () => {
               </h2>
               <div className="flex items-center">
                 <span className="text-3xl font-bold text-yellow-500 mr-2">
-                  {rating.toFixed(1)}
+                  {recipe.rating.toFixed(1)}
                 </span>
                 <div className="flex">
                   {[1, 2, 3, 4, 5].map((star) => (
                     <FaStar
                       key={star}
                       className={`text-2xl ${
-                        star <= Math.floor(rating)
+                        star <= Math.floor(recipe.rating)
                           ? "text-yellow-400"
                           : "text-gray-300"
                       }`}
@@ -194,7 +215,7 @@ const RecipeInfo = () => {
                   <p className="text-gray-800 font-semibold mb-1">
                     {comment.author}
                   </p>
-                  <p className="text-gray-600">{comment.text}</p>
+                  <p className="text-gray-600">{comment.content}</p>
                 </div>
               ))}
             </div>
