@@ -167,9 +167,12 @@ const LogIn = () => {
           </div>
 
           {/* Sign-Up Link */}
-          <p className="text-center font-semibold">
-            Don't have an account? <Link to='/signUp' className="text-green-800">Sign up</Link>
-          </p>
+          <p className="text-center font-semibold mt-4">
+      Don't have an account? <Link to='/signUp' className="text-green-800">Sign up</Link>
+    </p>
+    <p className="text-center font-semibold mt-2">
+      <Link to="/" className="text-green-800">Back to Homepage</Link>
+    </p>
 
         </div>
       </div>

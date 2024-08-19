@@ -30,7 +30,7 @@ bcrypt = Bcrypt(app)
 jwt = JWTManager(app)
 CORS(app)
 
-#cors = CORS(app, resources={r"/api/*": {"origins": "http://localhost:3000"}})
+CORS(app, resources={r"/api/*": {"origins": "http://localhost:3000"}})
 
 # Register blueprints
 app.register_blueprint(auth, url_prefix='/api/auth')

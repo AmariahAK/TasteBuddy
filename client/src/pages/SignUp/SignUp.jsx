@@ -77,7 +77,7 @@ const SignUp = () => {
       }
     }
   };
-  
+
   const SuccessAlert = () => (
     <div className="fixed top-0 left-1/2 transform -translate-x-1/2 mt-4 px-4 py-3 rounded-md border-l-4 border-green-500 bg-green-50 max-w-2xl mx-auto shadow-lg z-50">
       <div className="flex justify-between">
@@ -255,11 +255,16 @@ const SignUp = () => {
             </button>
           </form>
           <p className="mt-4 font-semibold text-center">
-            Already have an account?{" "}
-            <Link to="/login" className="text-green-800">
-              Sign in
-            </Link>
-          </p>
+      Already have an account?{" "}
+      <Link to="/login" className="text-green-800">
+        Sign in
+      </Link>
+    </p>
+    <p className="mt-2 font-semibold text-center">
+      <Link to="/" className="text-green-800">
+        Back to Homepage
+      </Link>
+    </p>
         </div>
         <div className="w-full md:w-1/2 hidden md:block">
           <img

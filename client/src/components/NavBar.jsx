@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
-import { FaBars, FaUser, FaSignInAlt, FaCaretDown } from "react-icons/fa";
+import { FaBars, FaUser, FaCaretDown } from "react-icons/fa";
+import { useAuth } from "../hooks/useAuth";
 
 const NavBar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const { isAuthenticated, isLoading } = useAuth();
   const navigate = useNavigate();
 
   const handleMenuToggle = () => {
@@ -17,32 +18,6 @@ const NavBar = () => {
     setIsProfileDropdownOpen(!isProfileDropdownOpen);
   };
 
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (isProfileDropdownOpen && !event.target.closest(".profile-dropdown")) {
-        setIsProfileDropdownOpen(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [isProfileDropdownOpen]);
-
-  useEffect(() => {
-    const checkLoginStatus = () => {
-      const token = localStorage.getItem('token');
-      if (token) {
-        setIsLoggedIn(true);
-      } else {
-        setIsLoggedIn(false);
-      }
-    };
-
-    checkLoginStatus();
-  }, []);
-
   const handleLogout = async () => {
     try {
       const response = await fetch('/api/auth/logout', {
@@ -52,8 +27,6 @@ const NavBar = () => {
         }
       });
       if (response.ok) {
-        setIsProfileDropdownOpen(false);
-        setIsLoggedIn(false);
         localStorage.removeItem('token');
         navigate('/');
       }
@@ -61,199 +34,100 @@ const NavBar = () => {
       console.error('Logout failed:', error);
     }
   };
-  
+
+  const navItems = [
+    { name: "HOME", path: "/", requireAuth: false },
+    { name: "RECIPES", path: "/recipes", requireAuth: true },
+    { name: "MY RECIPES", path: "/myrecipes", requireAuth: true },
+  ];
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
 
   return (
-    <div className="w-full sticky top-0 z-50">
-      <nav className="bg-customGreen text-white py-4 font-urbanist">
-        <div className="container mx-auto flex justify-between items-center px-4 w-full">
-          {/* Logo */}
-          <div className="flex items-center">
-            <img
-              src="https://res.cloudinary.com/dud0jjkln/image/upload/v1723487640/1_fenfqx.jpg"
-              alt="TasteTribe Logo"
-              className="h-8 mr-2"
-            />
-            <span className="text-xl font-bold">TasteTribe</span>
-          </div>
+    <nav className="bg-customGreen text-white py-4 font-urbanist sticky top-0 z-50">
+      <div className="container mx-auto flex justify-between items-center px-4">
+        {/* Logo */}
+        <NavLink to="/" className="flex items-center">
+          <img src="https://res.cloudinary.com/dud0jjkln/image/upload/v1723487640/1_fenfqx.jpg" alt="TasteTribe Logo" className="h-8 mr-2" />
+          <span className="text-xl font-bold">TasteTribe</span>
+        </NavLink>
 
-          {/* Navigation Links */}
-          <div className="hidden md:flex space-x-6">
-            {[
-              { name: "HOME", path: "/" },
-              { name: "ABOUT US", path: "/aboutus" },
-              { name: "RECIPES", path: "/recipes" },
-              { name: "CONTACT US", path: "/contactus" },
-            ].map((item) => (
-              <NavLink
-                key={item.name}
-                to={item.path}
-                className={({ isActive }) =>
-                  `hover:text-gray-400 ${
-                    isActive ? "border-b-2 border-red-500" : ""
-                  }`
-                }
-              >
-                {item.name}
+        {/* Navigation Links */}
+        <div className="hidden md:flex space-x-6">
+          <NavLink to="/" className={({ isActive }) => `hover:text-gray-400 ${isActive ? "border-b-2 border-red-500" : ""}`}>
+            HOME
+          </NavLink>
+          {isAuthenticated && (
+            <>
+              <NavLink to="/recipes" className={({ isActive }) => `hover:text-gray-400 ${isActive ? "border-b-2 border-red-500" : ""}`}>
+                RECIPES
               </NavLink>
-            ))}
-          </div>
-
-          {/* Icons for larger screens */}
-          <div className="hidden md:flex space-x-4 items-center">
-            <div className="relative profile-dropdown">
-              <button
-                onClick={handleProfileDropdownToggle}
-                className="flex items-center hover:text-gray-400 focus:outline-none"
-              >
-                <FaUser size={24} />
-                <FaCaretDown size={16} className="ml-1" />
-              </button>
-              {isProfileDropdownOpen && (
-                <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10">
-
-                  {isLoggedIn ? (
-                    <>
-                      <NavLink
-                        to="/profile"
-                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                        onClick={() => setIsProfileDropdownOpen(false)}
-                      >
-                        My Profile
-                      </NavLink>
-                      <NavLink
-                        to="/myrecipes"
-                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                        onClick={() => setIsProfileDropdownOpen(false)}
-                      >
-                        My Recipes
-                      </NavLink>
-                      <button
-                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                        onClick={handleLogout}
-                      >
-                        Log Out
-                      </button>
-                    </>
-                  ) : (
-                    <NavLink
-                      to="/login"
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                      onClick={() => {
-                        setIsProfileDropdownOpen(false);
-                        setIsLoggedIn(true);
-                        localStorage.setItem('token', 'some_token_value');
-                      }}
-                    >
-                      Log In
-                    </NavLink>
-                  )}
-                </div>
-              )}
-            </div>
-            {!isLoggedIn && (
-              <NavLink
-                to="/signup"
-                className="bg-white text-customGreen px-4 py-2 rounded-full hover:bg-gray-200 transition duration-300"
-              >
-                Sign Up
+              <NavLink to="/myrecipes" className={({ isActive }) => `hover:text-gray-400 ${isActive ? "border-b-2 border-red-500" : ""}`}>
+                MY RECIPES
               </NavLink>
-            )}
-
-          </div>
-
-          {/* Toggle Menu and Search Icon for mobile */}
-          <div className="flex space-x-4 md:hidden">
-            <button onClick={handleMenuToggle} className="hover:text-gray-400">
-              <FaBars size={24} />
-            </button>
-            <div className="relative profile-dropdown">
-              <button
-                onClick={handleProfileDropdownToggle}
-                className="flex items-center hover:text-gray-400 focus:outline-none"
-              >
-                <FaUser size={24} />
-                <FaCaretDown size={16} className="ml-1" />
-              </button>
-              {isProfileDropdownOpen && (
-                <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10">
-
-                  {isLoggedIn ? (
-                    <>
-                      <NavLink
-                        to="/profile"
-                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                        onClick={() => setIsProfileDropdownOpen(false)}
-                      >
-                        My Profile
-                      </NavLink>
-                      <NavLink
-                        to="/myrecipes"
-                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                        onClick={() => setIsProfileDropdownOpen(false)}
-                      >
-                        My Recipes
-                      </NavLink>
-                      <button
-                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                        onClick={handleLogout}
-                      >
-                        Log Out
-                      </button>
-                    </>
-                  ) : (
-                    <NavLink
-                      to="/login"
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                      onClick={() => {
-                        setIsProfileDropdownOpen(false);
-                        setIsLoggedIn(true);
-                        localStorage.setItem('token', 'some_token_value');
-                      }}
-                    >
-                      Log In
-                    </NavLink>
-                  )}
-                </div>
-              )}
-            </div>
-            {!isLoggedIn && (
-              <NavLink
-                to="/signup"
-                className="bg-white text-customGreen px-3 py-1 rounded-full text-sm hover:bg-gray-200 transition duration-300"
-              >
-                Sign Up
-              </NavLink>
-            )}
-
-          </div>
-
-          {/* Dropdown Menu for Mobile */}
-          {isMenuOpen && (
-            <div className="absolute top-16 left-0 w-full bg-customGreen md:hidden">
-              {[
-                { name: "HOME", path: "/" },
-                { name: "ABOUT US", path: "/aboutus" },
-                { name: "RECIPES", path: "/recipes" },
-                { name: "CONTACT US", path: "/contactus" },
-              ].map((item) => (
-                <NavLink
-                  key={item.name}
-                  to={item.path}
-                  className={({ isActive }) =>
-                    `block py-2 px-4 hover:bg-gray-700 ${
-                      isActive ? "bg-gray-700" : ""
-                    }`
-                  }
-                >
-                  {item.name}
-                </NavLink>
-              ))}
-            </div>
+            </>
           )}
         </div>
-      </nav>
-    </div>
+
+        {/* Auth Buttons / Profile Dropdown */}
+        <div className="flex items-center space-x-4">
+          {isAuthenticated ? (
+            <div className="relative">
+              <button onClick={handleProfileDropdownToggle} className="flex items-center hover:text-gray-400 focus:outline-none">
+                <FaUser size={24} />
+                <FaCaretDown size={16} className="ml-1" />
+              </button>
+              {isProfileDropdownOpen && (
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10">
+                  <NavLink to="/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onClick={() => setIsProfileDropdownOpen(false)}>
+                    My Profile
+                  </NavLink>
+                  <button className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onClick={handleLogout}>
+                    Log Out
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <>
+              <NavLink to="/login" className="hover:text-gray-400">Log In</NavLink>
+              <NavLink to="/signup" className="bg-white text-customGreen px-4 py-2 rounded-full hover:bg-gray-200 transition duration-300">Sign Up</NavLink>
+            </>
+          )}
+        </div>
+
+        {/* Mobile Menu Button */}
+        <button className="md:hidden" onClick={handleMenuToggle}>
+          <FaBars size={24} />
+        </button>
+      </div>
+
+      {/* Mobile Menu */}
+      {isMenuOpen && (
+        <div className="md:hidden mt-4">
+          <NavLink to="/" className="block py-2 px-4 hover:bg-gray-700" onClick={() => setIsMenuOpen(false)}>
+            HOME
+          </NavLink>
+          {isAuthenticated ? (
+            <>
+              <NavLink to="/recipes" className="block py-2 px-4 hover:bg-gray-700" onClick={() => setIsMenuOpen(false)}>
+                RECIPES
+              </NavLink>
+              <NavLink to="/myrecipes" className="block py-2 px-4 hover:bg-gray-700" onClick={() => setIsMenuOpen(false)}>
+                MY RECIPES
+              </NavLink>
+            </>
+          ) : (
+            <>
+              <NavLink to="/login" className="block py-2 px-4 hover:bg-gray-700" onClick={() => setIsMenuOpen(false)}>Log In</NavLink>
+              <NavLink to="/signup" className="block py-2 px-4 hover:bg-gray-700" onClick={() => setIsMenuOpen(false)}>Sign Up</NavLink>
+            </>
+          )}
+        </div>
+      )}
+    </nav>
   );
 };
 
