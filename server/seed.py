@@ -3,14 +3,19 @@ import random
 from app import app, db
 from models import User, Recipe, Comment
 
+from flask_bcrypt import Bcrypt
+
+bcrypt = Bcrypt()
+
 def seed_data():
     # Create admin user if not exists
     admin = User.query.filter_by(username="admin").first()
     if not admin:
+        hashed_password = bcrypt.generate_password_hash("X9#mK2$pL7@qR3").decode('utf-8')
         admin = User(
             email="admin@tastetribe.com",
             username="admin",
-            password="securepassword123",
+            password=hashed_password,
             firstName="Admin",
             lastName="User",
             title="Administrator",

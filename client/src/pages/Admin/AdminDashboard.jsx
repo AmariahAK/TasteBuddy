@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
+import api from '../../api';
 
 const DashboardContainer = styled.div`
   padding: 2rem;
@@ -72,11 +72,18 @@ const DeleteButton = styled.button`
   }
 `;
 
+const LoadingMessage = styled.p`
+  text-align: center;
+  color: #4caf50;
+  font-size: 1.2rem;
+`;
+
 const AdminDashboard = () => {
   const [users, setUsers] = useState([]);
   const [recipes, setRecipes] = useState([]);
   const [comments, setComments] = useState([]);
   const [statistics, setStatistics] = useState({});
+  const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -90,27 +97,25 @@ const AdminDashboard = () => {
       return;
     }
 
-    const config = {
-      headers: { Authorization: `Bearer ${token}` }
-    };
-
     try {
       const [usersResponse, recipesResponse, commentsResponse, statsResponse] = await Promise.all([
-        axios.get('/api/admin/users', config),
-        axios.get('/api/admin/recipes', config),
-        axios.get('/api/admin/comments', config),
-        axios.get('/api/admin/statistics', config)
+        api.get('/api/admin/users'),
+        api.get('/api/admin/recipes'),
+        api.get('/api/admin/comments'),
+        api.get('/api/admin/statistics')
       ]);
 
       setUsers(usersResponse.data);
       setRecipes(recipesResponse.data);
       setComments(commentsResponse.data);
       setStatistics(statsResponse.data);
+      setIsLoading(false);
     } catch (error) {
       console.error('Error fetching data:', error);
       if (error.response && error.response.status === 401) {
         handleLogout();
       }
+      setIsLoading(false);
     }
   };
 
@@ -120,16 +125,17 @@ const AdminDashboard = () => {
   };
 
   const handleDeleteComment = async (commentId) => {
-    const token = localStorage.getItem('adminToken');
     try {
-      await axios.delete(`/admin/comments/${commentId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await api.delete(`/api/admin/comments/${commentId}`);
       fetchData();
     } catch (error) {
       console.error('Error deleting comment:', error);
     }
   };
+
+  if (isLoading) {
+    return <LoadingMessage>Loading...</LoadingMessage>;
+  }
 
   return (
     <DashboardContainer>
@@ -146,7 +152,7 @@ const AdminDashboard = () => {
       <Section>
         <SectionTitle>Users</SectionTitle>
         <List>
-          {users.map(user => (
+          {Array.isArray(users) && users.map(user => (
             <ListItem key={user.id}>{user.email}</ListItem>
           ))}
         </List>
@@ -155,7 +161,7 @@ const AdminDashboard = () => {
       <Section>
         <SectionTitle>Recipes</SectionTitle>
         <List>
-          {recipes.map(recipe => (
+          {Array.isArray(recipes) && recipes.map(recipe => (
             <ListItem key={recipe.id}>{recipe.title}</ListItem>
           ))}
         </List>
@@ -164,7 +170,7 @@ const AdminDashboard = () => {
       <Section>
         <SectionTitle>Comments</SectionTitle>
         <List>
-          {comments.map(comment => (
+          {Array.isArray(comments) && comments.map(comment => (
             <ListItem key={comment.id}>
               {comment.content}
               <DeleteButton onClick={() => handleDeleteComment(comment.id)}>Delete</DeleteButton>

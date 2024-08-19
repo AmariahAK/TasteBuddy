@@ -42,6 +42,9 @@ class User(db.Model, SerializerMixin):
 
     def is_regular_user(self):
         return not self.is_admin
+    
+    def set_password(self, password):
+        self.password = Bcrypt.generate_password_hash(password).decode('utf-8')
 
     def to_dict(self):
         return {

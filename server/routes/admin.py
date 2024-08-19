@@ -13,20 +13,29 @@ admin = Blueprint('admin', __name__)
 @admin.route('/signin', methods=['POST', 'OPTIONS'])
 @cross_origin()
 def admin_signin():
+    if request.method == 'OPTIONS':
+        return '', 200
+
     data = request.get_json()
     email = data.get('email')
     password = data.get('password')
 
     user = User.query.filter_by(email=email, is_admin=True).first()
     
-    if request.method == 'OPTIONS':
-        return '', 200
-
-    if user and bcrypt.check_password_hash(user.password, password):
-        access_token = create_access_token(identity=user.id)
-        return jsonify(access_token=access_token), 200
+    if user:
+        try:
+            if bcrypt.check_password_hash(user.password, password):
+                access_token = create_access_token(identity=user.id)
+                return jsonify(access_token=access_token), 200
+            else:
+                return jsonify({"message": "Invalid credentials"}), 401
+        except ValueError as e:
+            print(f"Password verification error: {str(e)}")
+            print(f"Stored password hash: {user.password}")
+            return jsonify({"message": "An error occurred during authentication"}), 500
     else:
-        return jsonify({"message": "Invalid credentials or not an admin"}), 401
+        return jsonify({"message": "User not found or not an admin"}), 404
+
 
 
 def admin_required(fn):
