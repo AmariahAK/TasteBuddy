@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { FaBars, FaUser, FaCaretDown } from "react-icons/fa";
 import { useAuth } from "../hooks/useAuth";
+import api from '../api';
+
 
 const NavBar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -20,13 +22,12 @@ const NavBar = () => {
 
   const handleLogout = async () => {
     try {
-      const response = await fetch('/api/auth/logout', {
-        method: 'POST',
+      const response = await api.post('/api/auth/logout', {}, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
       });
-      if (response.ok) {
+      if (response.status === 200) {
         localStorage.removeItem('token');
         navigate('/');
       }
@@ -34,6 +35,7 @@ const NavBar = () => {
       console.error('Logout failed:', error);
     }
   };
+  
 
   const navItems = [
     { name: "HOME", path: "/", requireAuth: false },
