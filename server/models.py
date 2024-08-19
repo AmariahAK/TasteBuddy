@@ -20,6 +20,7 @@ class User(db.Model, SerializerMixin):
     serialize_rules = ('-password', '-notifications.user', '-comments.user', '-recipes.user', '-bookmarks.user', '-likes.user', '-ratings.user')
 
     id = db.Column(db.Integer, primary_key=True)
+    is_admin = db.Column(db.Boolean, default=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     username = db.Column(db.String(80), unique=True, nullable=False)
     password = db.Column(db.String(100), nullable=False)
@@ -36,16 +37,11 @@ class User(db.Model, SerializerMixin):
     recipes = db.relationship('Recipe', back_populates='user', lazy=True, cascade='all, delete-orphan')
     comments = db.relationship('Comment', back_populates='user', lazy=True, cascade='all, delete-orphan')
 
-    # @property
-    # def password(self):
-    #     return self._password
+    def is_admin_user(self):
+        return self.is_admin
 
-    # @password.setter
-    # def password(self, plain_text_password):
-    #     self._password = bcrypt.generate_password_hash(plain_text_password).decode('utf-8')
-
-    # def check_password(self, plain_text_password):
-    #     return bcrypt.check_password_hash(self._password, plain_text_password)
+    def is_regular_user(self):
+        return not self.is_admin
 
     def to_dict(self):
         return {
@@ -57,6 +53,7 @@ class User(db.Model, SerializerMixin):
             'title': self.title,
             'aboutMe': self.aboutMe,
             'profilePicture': self.profilePicture,
+            'is_admin': self.is_admin,
             'recipes': [recipe.to_dict() for recipe in self.recipes],
             'bookmarks': [bookmark.to_dict() for bookmark in self.bookmarks],
             'likes': [like.to_dict() for like in self.likes],
@@ -67,6 +64,7 @@ class User(db.Model, SerializerMixin):
     
     def __repr__(self):
         return f'<User {self.username}, {self.email}, {self.password}, {self.firstName} >'
+
     
 
 #======================================= RECIPE MODEL =========================================================
