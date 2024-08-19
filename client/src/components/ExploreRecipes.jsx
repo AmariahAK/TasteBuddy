@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import api from '../api';
 
 import { FaXTwitter } from "react-icons/fa6";
@@ -13,7 +13,6 @@ import {
   FaInstagram,
 } from "react-icons/fa";
 
-// Implement categories in the explore recipes section according to diet Types
 const dietType = [
   "All",
   "Vegan",
@@ -26,20 +25,36 @@ const dietType = [
 
 const ExploreRecipes = () => {
   const [recipes, setRecipes] = useState([]);
+  const [selectedDietType, setSelectedDietType] = useState("All");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCountry, setSelectedCountry] = useState("All");
+  const [bookmarkedRecipes, setBookmarkedRecipes] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchRecipes = async () => {
       try {
-        const response = await api.get('/recipes');
+        setLoading(true);
+        const response = await api.get('/api/recipes');
         setRecipes(response.data);
+        setError(null);
       } catch (error) {
         console.error('Error fetching recipes:', error);
+        if (error.response && error.response.status === 422) {
+          setError("Unauthorized. Please log in.");
+          navigate('/login');
+        } else {
+          setError("An error occurred while fetching recipes.");
+        }
+      } finally {
+        setLoading(false);
       }
     };
     fetchRecipes();
-  }, []);
+  }, [navigate]);
 
-  // Filter the recipes based on the selected diet type, country, and search term
   const filteredRecipes = recipes.filter(
     (recipe) =>
       (recipe.dietType === selectedDietType || selectedDietType === "All") &&
@@ -54,7 +69,6 @@ const ExploreRecipes = () => {
     ...new Set(recipes.map((recipe) => recipe.countryOfOrigin)),
   ];
 
-  // Handle the share logic using social media links
   const shareOnSocialMedia = (platform, recipe) => {
     const url = encodeURIComponent(window.location.href);
     const text = encodeURIComponent(`Check out this ${recipe.title} recipe!`);
@@ -80,16 +94,27 @@ const ExploreRecipes = () => {
     window.open(shareUrl, "_blank");
   };
 
-  // Handle the bookmark button click event
-  const toggleBookmark = (recipeId) => {
-    setBookmarkedRecipes((prevBookmarked) => {
-      if (prevBookmarked.includes(recipeId)) {
-        return prevBookmarked.filter((id) => id !== recipeId);
+  const toggleBookmark = async (recipeId) => {
+    try {
+      if (bookmarkedRecipes.includes(recipeId)) {
+        await api.delete(`/api/bookmarks/${recipeId}`);
+        setBookmarkedRecipes(bookmarkedRecipes.filter(id => id !== recipeId));
       } else {
-        return [...prevBookmarked, recipeId];
+        await api.post('/api/bookmarks', { recipeId });
+        setBookmarkedRecipes([...bookmarkedRecipes, recipeId]);
       }
-    });
+    } catch (error) {
+      console.error('Error toggling bookmark:', error);
+    }
   };
+
+  if (loading) {
+    return <div className="text-center mt-8">Loading...</div>;
+  }
+
+  if (error) {
+    return <div className="text-center mt-8 text-red-500">{error}</div>;
+  }
 
   return (
     <div className="bg-green-50 min-h-screen p-8 font-urbanist">
@@ -97,24 +122,22 @@ const ExploreRecipes = () => {
         Explore Recipes
       </h1>
 
-      {/*Set up the Categories */}
       <div className="flex justify-center space-x-4 mb-12">
-        {dietType.map((dietType) => (
+        {dietType.map((type) => (
           <button
-            key={dietType}
+            key={type}
             className={`px-6 py-3 ${
-              selectedDietType === dietType
+              selectedDietType === type
                 ? "bg-green-600 text-white"
                 : "bg-white text-green-600"
             } rounded-full shadow-lg transition duration-300 ease-in-out hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50`}
-            onClick={() => setSelectedDietType(dietType)}
+            onClick={() => setSelectedDietType(type)}
           >
-            {dietType}
+            {type}
           </button>
         ))}
       </div>
 
-      {/*Implement the Search Bar and Country Dropdown */}
       <div className="flex justify-between items-center mb-8">
         <div className="relative w-full max-w-xl">
           <input
@@ -148,7 +171,6 @@ const ExploreRecipes = () => {
         </div>
       </div>
 
-      {/*Add and style the Recipe Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
         {filteredRecipes.map((recipe) => (
           <div
@@ -202,7 +224,6 @@ const ExploreRecipes = () => {
                 View Recipe
               </Link>
 
-              {/*Create the social media links for sharing */}
               <div className="mt-4 flex justify-end space-x-4">
                 <FaFacebook
                   className="text-blue-600 cursor-pointer text-2xl hover:text-blue-800 transition-colors duration-300"
