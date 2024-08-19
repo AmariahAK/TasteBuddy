@@ -20,6 +20,10 @@ def register():
     email = data["email"]
     password = data["password"]
     username = data["username"]
+    confirm_password = data.get("confirmPassword", password)
+
+    if password != confirm_password:
+        return jsonify({"message": "Passwords do not match"}), 400
 
     if User.query.filter_by(email=email).first():
         return jsonify({"message": "Email already registered"}), 409
@@ -30,6 +34,7 @@ def register():
     db.session.commit()
 
     return jsonify({"message": "User registered successfully"}), 201
+
 
 @auth.route("/login", methods=["POST"])
 def login():

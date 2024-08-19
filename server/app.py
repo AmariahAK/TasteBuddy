@@ -5,6 +5,8 @@ from flask_jwt_extended import JWTManager
 from flask_cors import CORS
 from models import db
 from config import Config
+from flask_cors import cross_origin
+
 
 # Import your blueprints
 from routes.auth import auth, BLACKLIST
@@ -27,6 +29,8 @@ migrate = Migrate(app, db)
 bcrypt = Bcrypt(app)
 jwt = JWTManager(app)
 CORS(app)
+
+#cors = CORS(app, resources={r"/api/*": {"origins": "http://localhost:3000"}})
 
 # Register blueprints
 app.register_blueprint(auth, url_prefix='/api/auth')

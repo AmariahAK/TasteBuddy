@@ -5,6 +5,7 @@ import { VscLockSmall } from "react-icons/vsc";
 import { TbEyeClosed } from "react-icons/tb";
 import { RiEyeCloseFill } from "react-icons/ri";
 import { Link, useNavigate } from "react-router-dom";
+import api from '../../api';
 
 const SignUp = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -43,45 +44,40 @@ const SignUp = () => {
     setError("");
     setPasswordError("");
     setEmailError("");
-
+  
     if (password !== confirmPassword) {
       setError("Passwords do not match");
       return;
     }
-
+  
     if (password.length < 6) {
       setPasswordError("Password should be at least 6 characters");
       return;
     }
-
+  
     try {
-      const response = await fetch('/api/auth/signup', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password, username }),
-      });
-
-      if (response.ok) {
+      const response = await api.post('/api/auth/signup', { email, password, confirmPassword, username });
+  
+      if (response.status === 201) {
         setShowSuccessAlert(true);
         resetForm();
         setTimeout(() => {
           navigate('/login');
         }, 3000);
-      } else {
-        const data = await response.json();
-        if (data.message.includes("Email already registered")) {
-          setEmailError("The email address is already in use. Please proceed to login.");
-        } else {
-          setError(data.message);
-        }
       }
     } catch (error) {
-      setError("An error occurred during sign up. Please try again.");
+      if (error.response && error.response.data) {
+        if (error.response.data.message.includes("Email already registered")) {
+          setEmailError("The email address is already in use. Please proceed to login.");
+        } else {
+          setError(error.response.data.message);
+        }
+      } else {
+        setError("An error occurred during sign up. Please try again.");
+      }
     }
   };
-
+  
   const SuccessAlert = () => (
     <div className="fixed top-0 left-1/2 transform -translate-x-1/2 mt-4 px-4 py-3 rounded-md border-l-4 border-green-500 bg-green-50 max-w-2xl mx-auto shadow-lg z-50">
       <div className="flex justify-between">

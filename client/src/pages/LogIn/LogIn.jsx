@@ -4,6 +4,7 @@ import { RiEyeCloseFill } from "react-icons/ri";
 import { MdOutlineMailOutline } from "react-icons/md";
 import { VscLockSmall } from "react-icons/vsc";
 import { Link, useNavigate } from "react-router-dom";
+import api from '../../api';
 
 const LogIn = () => {
   const [email, setEmail] = useState('');
@@ -28,58 +29,49 @@ const LogIn = () => {
   const handleLogin = async () => {
     setError('');
     setSuccess('');
-
+  
     try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        localStorage.setItem('token', data.access_token);
+      const response = await api.post('/auth/login', { email, password });
+  
+      if (response.status === 200) {
+        localStorage.setItem('token', response.data.access_token);
         resetForm();
         navigate('/recipes');
-      } else {
-        const data = await response.json();
-        setError(data.message || "Invalid email or password");
       }
     } catch (error) {
-      setError("An error occurred during login. Please try again.");
+      if (error.response) {
+        setError(error.response.data.message || "Invalid email or password");
+      } else {
+        setError("An error occurred during login. Please try again.");
+      }
     }
   };
+  
 
   const handleForgotPassword = async () => {
     setError('');
     setSuccess('');
-
+  
     if (!email) {
       setError("Please enter your email address.");
       return;
     }
-
+  
     try {
-      const response = await fetch('/api/auth/reset-password', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email }),
-      });
-
-      if (response.ok) {
+      const response = await api.post('/auth/reset-password', { email });
+  
+      if (response.status === 200) {
         setSuccess("Password reset instructions sent to your email.");
-      } else {
-        const data = await response.json();
-        setError(data.message || "Failed to send reset instructions.");
       }
     } catch (error) {
-      setError("An error occurred. Please try again.");
+      if (error.response) {
+        setError(error.response.data.message || "Failed to send reset instructions.");
+      } else {
+        setError("An error occurred. Please try again.");
+      }
     }
   };
+  
 
   return (
     <>
