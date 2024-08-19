@@ -14,6 +14,7 @@ const SignUp = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [firstName, setFirstName] = useState("");
   const [error, setError] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const [emailError, setEmailError] = useState("");
@@ -33,6 +34,7 @@ const SignUp = () => {
     setEmail("");
     setPassword("");
     setConfirmPassword("");
+    setFirstName("");
     setShowPassword(false);
     setShowConfirmPassword(false);
     setError("");
@@ -56,7 +58,13 @@ const SignUp = () => {
     }
   
     try {
-      const response = await api.post('/api/auth/signup', { email, password, confirmPassword, username });
+      const response = await api.post('/api/auth/signup', { 
+        email, 
+        password, 
+        confirmPassword, 
+        username, 
+        firstName 
+      });
   
       if (response.status === 201) {
         setShowSuccessAlert(true);

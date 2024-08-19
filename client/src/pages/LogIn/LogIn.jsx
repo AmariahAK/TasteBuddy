@@ -31,7 +31,7 @@ const LogIn = () => {
     setSuccess('');
   
     try {
-      const response = await api.post('/auth/login', { email, password });
+      const response = await api.post('/api/auth/login', { email, password });
   
       if (response.status === 200) {
         localStorage.setItem('token', response.data.access_token);
