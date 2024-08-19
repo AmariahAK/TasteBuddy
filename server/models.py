@@ -97,6 +97,23 @@ class Recipe(db.Model, SerializerMixin):
     user = db.relationship('User', back_populates='recipes', lazy=True)
     comments = db.relationship('Comment', back_populates='recipe', lazy=True, cascade='all, delete-orphan')
     
+    def add_bookmark(self, user):
+        bookmark = Bookmark(userId=user.id, recipeId=self.id)
+        db.session.add(bookmark)
+        db.session.commit()
+    
+    def remove_bookmark(self, user):
+        bookmark = Bookmark.query.filter_by(userId=user.id, recipeId=self.id).first()
+        if bookmark:
+            db.session.delete(bookmark)
+            db.session.commit()
+        
+    def add_comment(self, user, content):
+        comment = Comment(userId=user.id, recipeId=self.id, content=content)
+        db.session.add(comment)
+        db.session.commit()
+        return comment
+
     def to_dict(self):
         return {
             'id': self.id,
@@ -118,6 +135,7 @@ class Recipe(db.Model, SerializerMixin):
             'ratings': [rating.to_dict() for rating in self.ratings],
             'comments': [comment.to_dict() for comment in self.comments],
         }
+
     
     def __repr__(self):
         return f'<Recipe {self.id}, {self.chefName}, {self.title}, {self.dietType}, {self.countryOfOrigin}, {self.comments}>'

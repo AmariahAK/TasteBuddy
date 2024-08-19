@@ -1,13 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import api from '../../api';
-import {
-  FaClock,
-  FaUtensils,
-  FaUsers,
-  FaStar,
-  FaBookmark,
-} from "react-icons/fa";
+import { FaClock, FaUtensils, FaUsers, FaStar, FaBookmark } from "react-icons/fa";
 
 const RecipeInfo = () => {
   const { recipeId } = useParams();
@@ -17,44 +11,54 @@ const RecipeInfo = () => {
   const [comments, setComments] = useState([]);
   const [comment, setComment] = useState("");
 
-
   useEffect(() => {
     const fetchRecipe = async () => {
       try {
         const response = await api.get(`/api/recipes/${recipeId}`);
         setRecipe(response.data);
         setComments(response.data.comments || []);
+        setIsBookmarked(response.data.isBookmarked || false);
       } catch (error) {
         console.error('Error fetching recipe:', error);
       }
     };
     fetchRecipe();
   }, [recipeId]);
-    
 
   const handleRating = (newRating) => {
     setRating(newRating);
   };
 
-  const handleBookmark = () => {
-    setIsBookmarked(!isBookmarked);
+  const handleBookmark = async () => {
+    try {
+      if (isBookmarked) {
+        await api.delete(`/api/recipes/${recipeId}/bookmark`);
+      } else {
+        await api.post(`/api/recipes/${recipeId}/bookmark`);
+      }
+      setIsBookmarked(!isBookmarked);
+    } catch (error) {
+      console.error('Error bookmarking recipe:', error);
+    }
   };
 
   const handleCommentChange = (e) => {
     setComment(e.target.value);
   };
 
-  const handleSubmitComment = (e) => {
+  const handleSubmitComment = async (e) => {
     e.preventDefault();
     if (comment.trim()) {
-      setComments([...comments, { author: "You", text: comment }]);
-      setComment("");
+      try {
+        const response = await api.post(`/api/recipes/${recipeId}/comment`, { content: comment });
+        setComments([...comments, response.data]);
+        setComment("");
+      } catch (error) {
+        console.error('Error submitting comment:', error);
+      }
     }
   };
 
-  if (!recipe) {
-    return <div>Loading...</div>;
-  }
 
   return (
     <div className="bg-gradient-to-r from-blue-100 to-green-100 min-h-screen py-12">
