@@ -1,6 +1,5 @@
 import React from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
-import useAuth from './hooks/useAuth';
 import App from "./App";
 import Home from "./pages/Home/Home";
 import AboutUs from "./pages/AboutUs/AboutUs";

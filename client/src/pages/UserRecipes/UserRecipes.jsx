@@ -1,9 +1,26 @@
 import React, { useState, useEffect } from 'react';
 import UserRecipeCard from '../../components/UserRecipeCard';
-import api from '../api';
+import api from '../../.../../api';
 
 const UserRecipes = () => {
   const [recipes, setRecipes] = useState([]);
+  const [showForm, setShowForm] = useState(false);
+  const [editingRecipe, setEditingRecipe] = useState(null);
+  const [newRecipe, setNewRecipe] = useState({
+    chefImage: '',
+    title: '',
+    chefName: '',
+    image: '',
+    ingredients: '',
+    instructions: '',
+    url: '',
+    moreInfoUrl: '',
+    rating: 0,
+    prepTime: '',
+    servings: 0,
+    countryOfOrigin: '',
+    dietType: '',
+  });
 
   useEffect(() => {
     const fetchUserRecipes = async () => {
@@ -17,19 +34,6 @@ const UserRecipes = () => {
     fetchUserRecipes();
   }, []);
 
-  const fetchRecipes = async () => {
-    try {
-      const response = await fetch('http://localhost:3001/recipes');
-      if (!response.ok) {
-        throw new Error('Failed to fetch recipes');
-      }
-      const data = await response.json();
-      setRecipes(data);
-    } catch (error) {
-      console.error('Error fetching recipes:', error);
-    }
-  };
-
   const handleInputChange = (e) => {
     const value = e.target.name === 'rating' ? parseFloat(e.target.value) : e.target.value;
     setNewRecipe({ ...newRecipe, [e.target.name]: value });
@@ -38,30 +42,34 @@ const UserRecipes = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await api.post('/recipes', newRecipe);
-      setRecipes([...recipes, response.data]);
-      // ... reset form and close modal
+      let response;
+      if (editingRecipe) {
+        response = await api.put(`/recipes/${editingRecipe.id}`, newRecipe);
+        setRecipes(recipes.map(recipe => recipe.id === editingRecipe.id ? response.data : recipe));
+      } else {
+        response = await api.post('/recipes', newRecipe);
+        setRecipes([...recipes, response.data]);
+      }
+      setNewRecipe({
+        chefImage: '',
+        title: '',
+        chefName: '',
+        image: '',
+        ingredients: '',
+        instructions: '',
+        url: '',
+        moreInfoUrl: '',
+        rating: 0,
+        prepTime: '',
+        servings: 0,
+        countryOfOrigin: '',
+        dietType: '',
+      });
+      setShowForm(false);
+      setEditingRecipe(null);
     } catch (error) {
-      console.error('Error creating recipe:', error);
+      console.error('Error creating/updating recipe:', error);
     }
-  };
-
-    setNewRecipe({
-      chefImage: '',
-      title: '',
-      chefName: '',
-      image: '',
-      ingredients: '',
-      instructions: '',
-      url: '',
-      moreInfoUrl: '',
-      rating: 0,
-      prepTime: '',
-      servings: 0,
-      countryOfOrigin: '',
-      dietType: '',
-    });
-    setShowForm(false);
   };
 
   const handleEdit = (recipe) => {
@@ -72,14 +80,7 @@ const UserRecipes = () => {
 
   const handleDelete = async (id) => {
     try {
-      const response = await fetch(`http://localhost:3001/recipes/${id}`, {
-        method: 'DELETE',
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to delete recipe');
-      }
-
+      await api.delete(`/recipes/${id}`);
       setRecipes((prevRecipes) => prevRecipes.filter((recipe) => recipe.id !== id));
     } catch (error) {
       console.error('Error deleting recipe:', error);
@@ -240,5 +241,6 @@ const UserRecipes = () => {
       </div>
     </div>
   );
+};
 
 export default UserRecipes;
