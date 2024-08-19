@@ -12,18 +12,16 @@ import LogIn from "./pages/LogIn/LogIn";
 import SignUp from "./pages/SignUp/SignUp";
 import ErrorPage from "./pages/ErrorPage/ErrorPage";
 import AdminDashboard from "./pages/Admin/AdminDashboard";
+import AdminSignIn from "./pages/Admin/AdminSignin";
 
 const ProtectedRoute = ({ children }) => {
-  // Replace this with your authentication logic
   const isAuthenticated = localStorage.getItem('token') !== null;
   return isAuthenticated ? children : <Navigate to="/login" replace />;
 };
 
 const AdminRoute = ({ children }) => {
-  // Replace this with your admin authentication logic
-  const isAuthenticated = localStorage.getItem('token') !== null;
-  const isAdmin = localStorage.getItem('userRole') === 'admin';
-  return isAuthenticated && isAdmin ? children : <Navigate to="/" replace />;
+  const isAuthenticated = localStorage.getItem('adminToken') !== null;
+  return isAuthenticated ? children : <Navigate to="/admin/signin" replace />;
 };
 
 const routes = [
@@ -44,24 +42,27 @@ const routes = [
         path: "/signup",
         element: <SignUp />,
       },
+      // New public routes
+      {
+        path: "/aboutus",
+        element: <AboutUs />,
+      },
+      {
+        path: "/contactus",
+        element: <ContactUs />,
+      },
+      
+      // Protected routes
       {
         element: <ProtectedRoute><Outlet /></ProtectedRoute>,
         children: [
           {
-            path: "/aboutus",
-            element: <AboutUs />,
-          },
-          {
-            path: "/contactus",
-            element: <ContactUs />,
+            path: "/recipes/:recipeId",
+            element: <RecipeInfo />,
           },
           {
             path: "/recipes",
             element: <Recipes />,
-          },
-          {
-            path: "/recipes/:recipeId",
-            element: <RecipeInfo />,
           },
           {
             path: "/myrecipes",
@@ -74,14 +75,27 @@ const routes = [
         ],
       },
       {
-        element: <AdminRoute><Outlet /></AdminRoute>,
+        path: "/admin",
         children: [
           {
-            path: "/admin",
-            element: <AdminDashboard />,
+            index: true,
+            element: <Navigate to="/admin/signin" replace />,
+          },
+          {
+            path: "signin",
+            element: <AdminSignIn />,
+          },
+          {
+            element: <AdminRoute><Outlet /></AdminRoute>,
+            children: [
+              {
+                path: "dashboard",
+                element: <AdminDashboard />,
+              },
+            ],
           },
         ],
-      },
+      },         
     ],
   },
 ];

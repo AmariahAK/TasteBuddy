@@ -30,7 +30,7 @@ bcrypt = Bcrypt(app)
 jwt = JWTManager(app)
 
 # Enable CORS
-CORS(app, resources={r"/api/*": {"origins": "http://localhost:3000"}})
+CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}})
 
 # Register blueprints
 app.register_blueprint(auth, url_prefix='/api/auth')
@@ -42,6 +42,8 @@ app.register_blueprint(ratings, url_prefix='/api/ratings')
 app.register_blueprint(notifications, url_prefix='/api/notifications')
 app.register_blueprint(comments, url_prefix='/api/comments')
 app.register_blueprint(contact, url_prefix='/api/contact')
+app.register_blueprint(admin, url_prefix='/api/admin')
+
 
 # JWT token blacklist check
 @jwt.token_in_blocklist_loader

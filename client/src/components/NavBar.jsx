@@ -38,7 +38,7 @@ const NavBar = () => {
   
 
   const navItems = [
-    { name: "HOME", path: "/", requireAuth: false },
+    //{ name: "HOME", path: "/", requireAuth: false },
     { name: "RECIPES", path: "/recipes", requireAuth: true },
     { name: "MY RECIPES", path: "/myrecipes", requireAuth: true },
   ];
@@ -58,9 +58,6 @@ const NavBar = () => {
 
         {/* Navigation Links */}
         <div className="hidden md:flex space-x-6">
-          <NavLink to="/" className={({ isActive }) => `hover:text-gray-400 ${isActive ? "border-b-2 border-red-500" : ""}`}>
-            HOME
-          </NavLink>
           {isAuthenticated && (
             <>
               <NavLink to="/recipes" className={({ isActive }) => `hover:text-gray-400 ${isActive ? "border-b-2 border-red-500" : ""}`}>
@@ -109,9 +106,6 @@ const NavBar = () => {
       {/* Mobile Menu */}
       {isMenuOpen && (
         <div className="md:hidden mt-4">
-          <NavLink to="/" className="block py-2 px-4 hover:bg-gray-700" onClick={() => setIsMenuOpen(false)}>
-            HOME
-          </NavLink>
           {isAuthenticated ? (
             <>
               <NavLink to="/recipes" className="block py-2 px-4 hover:bg-gray-700" onClick={() => setIsMenuOpen(false)}>

@@ -4,18 +4,23 @@ from models import db, User, Recipe, Comment, Bookmark, Like, Rating, Notificati
 from schema.schema import UserSchema, RecipeSchema, CommentSchema, BookmarkSchema, LikeSchema, RatingSchema, NotificationSchema
 from flask_bcrypt import Bcrypt
 from functools import wraps
+from flask_cors import cross_origin
 
 bcrypt = Bcrypt()
 admin = Blueprint('admin', __name__)
 
 
-@admin.route('/signin', methods=['POST'])
+@admin.route('/signin', methods=['POST', 'OPTIONS'])
+@cross_origin()
 def admin_signin():
     data = request.get_json()
     email = data.get('email')
     password = data.get('password')
 
     user = User.query.filter_by(email=email, is_admin=True).first()
+    
+    if request.method == 'OPTIONS':
+        return '', 200
 
     if user and bcrypt.check_password_hash(user.password, password):
         access_token = create_access_token(identity=user.id)
