@@ -12,18 +12,25 @@ import {
 const RecipeInfo = () => {
   const { recipeId } = useParams();
   const [recipe, setRecipe] = useState(null);
+  const [rating, setRating] = useState(0);
+  const [isBookmarked, setIsBookmarked] = useState(false);
+  const [comments, setComments] = useState([]);
+  const [comment, setComment] = useState("");
+
 
   useEffect(() => {
     const fetchRecipe = async () => {
       try {
         const response = await api.get(`/api/recipes/${recipeId}`);
         setRecipe(response.data);
+        setComments(response.data.comments || []);
       } catch (error) {
         console.error('Error fetching recipe:', error);
       }
     };
     fetchRecipe();
   }, [recipeId]);
+    
 
   const handleRating = (newRating) => {
     setRating(newRating);
