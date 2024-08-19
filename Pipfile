@@ -13,6 +13,7 @@ flask-migrate = "*"
 flask = "*"
 flask-jwt-extended = "*"
 sqlalchemy-serializer = "*"
+marshmallow = "*"
 
 [dev-packages]
 

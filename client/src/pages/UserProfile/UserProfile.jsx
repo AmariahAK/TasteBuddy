@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import api from '../api';
 
 const UserProfile = () => {
   const [file, setFile] = useState(null);
   const [activeTab, setActiveTab] = useState("account");
   const [isLoading, setIsLoading] = useState(true);
+  const [userId, setUserId] = useState(null);
 
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -20,38 +22,34 @@ const UserProfile = () => {
 
   useEffect(() => {
     const loadData = async () => {
-      setFirstName(localStorage.getItem("firstName") || "");
-      setLastName(localStorage.getItem("lastName") || "");
-      setTitle(localStorage.getItem("title") || "");
-      setEmail(localStorage.getItem("email") || "");
-      setAboutMe(localStorage.getItem("aboutMe") || "");
+      try {
+        const userResponse = await api.get('/api/users/current');
+        const userData = userResponse.data;
+        setUserId(userData.id);
+        setFirstName(userData.firstName || "");
+        setLastName(userData.lastName || "");
+        setTitle(userData.title || "");
+        setEmail(userData.email || "");
+        setAboutMe(userData.aboutMe || "");
 
-      await fetchNotifications();
-      await fetchBookmarks();
-      await fetchUserStats();
+        await fetchNotifications();
+        await fetchBookmarks();
+        await fetchUserStats();
 
-      setIsLoading(false);
+        setIsLoading(false);
+      } catch (error) {
+        console.error("Error loading user data:", error);
+        setIsLoading(false);
+      }
     };
 
     loadData();
   }, []);
 
-  useEffect(() => {
-    if (!isLoading) {
-      localStorage.setItem("firstName", firstName);
-      localStorage.setItem("lastName", lastName);
-      localStorage.setItem("title", title);
-      localStorage.setItem("email", email);
-      localStorage.setItem("aboutMe", aboutMe);
-    }
-  }, [firstName, lastName, title, email, aboutMe, isLoading]);
-
   const fetchNotifications = async () => {
     try {
-      // Replace this with your actual API call
-      const response = await fetch("/api/notifications");
-      const data = await response.json();
-      setNotifications(data);
+      const response = await api.get("/api/notifications");
+      setNotifications(response.data);
     } catch (error) {
       console.error("Error fetching notifications:", error);
     }
@@ -59,10 +57,8 @@ const UserProfile = () => {
 
   const fetchBookmarks = async () => {
     try {
-      // Replace this with your actual API call
-      const response = await fetch("/api/bookmarks");
-      const data = await response.json();
-      setBookmarks(data);
+      const response = await api.get("/api/bookmarks");
+      setBookmarks(response.data);
     } catch (error) {
       console.error("Error fetching bookmarks:", error);
     }
@@ -70,9 +66,8 @@ const UserProfile = () => {
 
   const fetchUserStats = async () => {
     try {
-      // Replace this with your actual API call
-      const response = await fetch("/api/user-stats");
-      const data = await response.json();
+      const response = await api.get("/api/user-stats");
+      const data = response.data;
       setRecipes(data.recipes);
       setFollowers(data.followers);
       setFollowing(data.following);
@@ -90,7 +85,7 @@ const UserProfile = () => {
   };
 
   const handleExploreRecipesClick = () => {
-    navigate("/recipes");
+    navigate("/api/recipes");
   };
 
   const handleInputChange = (e) => {
@@ -113,6 +108,43 @@ const UserProfile = () => {
         break;
       default:
         break;
+    }
+  };
+
+  const handleSave = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await api.put(`/api/users/${userId}`, {
+        firstName,
+        lastName,
+        title,
+        email,
+        aboutMe
+      });
+      console.log("Profile updated successfully", response.data);
+      // You might want to show a success message to the user here
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      // You might want to show an error message to the user here
+    }
+  };
+
+  const handleAvatarUpload = async () => {
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('avatar', file);
+
+    try {
+      const response = await api.post('/api/users/avatar', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      console.log("Avatar uploaded successfully", response.data);
+      // You might want to update the user's avatar in the UI here
+    } catch (error) {
+      console.error("Error uploading avatar:", error);
     }
   };
 
@@ -216,6 +248,14 @@ const UserProfile = () => {
                     accept="image/*"
                     onChange={handleFileChange}
                   />
+                  {file && (
+                    <button
+                      onClick={handleAvatarUpload}
+                      className="mt-4 bg-blue-500 text-white px-6 py-2 rounded-full hover:bg-blue-600 transition duration-300 ease-in-out"
+                    >
+                      Save Avatar
+                    </button>
+                  )}
                   <p className="text-gray-600 mt-6 text-center">Soul Society</p>
                   <p className="text-gray-600 text-center">{aboutMe}</p>
                 </div>
@@ -225,7 +265,7 @@ const UserProfile = () => {
                 <h2 className="text-2xl font-bold mb-6 text-gray-800">
                   Basic Info
                 </h2>
-                <form>
+                <form onSubmit={handleSave}>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                       <label className="block text-gray-700 font-medium mb-2">
@@ -333,56 +373,57 @@ const UserProfile = () => {
                   <button
                     onClick={handleExploreRecipesClick}
                     className="bg-customGreen text-white px-6 py-3 rounded-full hover:bg-green-950 transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50"
-                  >
-                    Explore Recipes
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
-
-          {activeTab === "bookmarks" && (
-            <div className="bg-white rounded-xl shadow-2xl p-8 max-w-md mx-auto">
-              <h3 className="text-2xl font-semibold mb-4 text-gray-800">
-                My Bookmarks
-              </h3>
-              {bookmarks.length > 0 ? (
-                <ul className="space-y-4">
-                  {bookmarks.map((bookmark, index) => (
-                    <li key={index} className="border-b border-gray-200 pb-4">
-                      <h4 className="text-lg font-semibold text-gray-800">
-                        {bookmark.title}
-                      </h4>
-                      <p className="text-gray-600">{bookmark.description}</p>
-                      <a
-                        href={bookmark.url}
-                        className="text-customGreen hover:underline"
-                      >
-                        View Recipe
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <div className="text-center">
-                  <p className="mb-6 text-gray-600">
-                    You haven't bookmarked any recipes yet. Start exploring and
-                    save your favorite recipes here!
-                  </p>
-                  <button
-                    onClick={handleExploreRecipesClick}
-                    className="bg-customGreen text-white px-6 py-3 rounded-full hover:bg-green-950 transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50"
-                  >
-                    Discover Recipes
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
+                    >
+                      Explore Recipes
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+  
+            {activeTab === "bookmarks" && (
+              <div className="bg-white rounded-xl shadow-2xl p-8 max-w-md mx-auto">
+                <h3 className="text-2xl font-semibold mb-4 text-gray-800">
+                  My Bookmarks
+                </h3>
+                {bookmarks.length > 0 ? (
+                  <ul className="space-y-4">
+                    {bookmarks.map((bookmark, index) => (
+                      <li key={index} className="border-b border-gray-200 pb-4">
+                        <h4 className="text-lg font-semibold text-gray-800">
+                          {bookmark.title}
+                        </h4>
+                        <p className="text-gray-600">{bookmark.description}</p>
+                        <a
+                          href={bookmark.url}
+                          className="text-customGreen hover:underline"
+                        >
+                          View Recipe
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <div className="text-center">
+                    <p className="mb-6 text-gray-600">
+                      You haven't bookmarked any recipes yet. Start exploring and
+                      save your favorite recipes here!
+                    </p>
+                    <button
+                      onClick={handleExploreRecipesClick}
+                      className="bg-customGreen text-white px-6 py-3 rounded-full hover:bg-green-950 transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50"
+                    >
+                      Discover Recipes
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
-    </div>
-  );
-};
-
-export default UserProfile;
+    );
+  };
+  
+  export default UserProfile;
+  

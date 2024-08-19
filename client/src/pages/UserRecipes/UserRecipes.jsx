@@ -1,28 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import UserRecipeCard from '../../components/UserRecipeCard';
+import api from '../api';
 
 const UserRecipes = () => {
   const [recipes, setRecipes] = useState([]);
-  const [showForm, setShowForm] = useState(false);
-  const [editingRecipe, setEditingRecipe] = useState(null);
-  const [newRecipe, setNewRecipe] = useState({
-    chefImage: '',
-    title: '',
-    chefName: '',
-    image: '',
-    ingredients: '',
-    instructions: '',
-    url: '',
-    moreInfoUrl: '',
-    rating: 0,
-    prepTime: '',
-    servings: 0,
-    countryOfOrigin: '',
-    dietType: '',
-  });
 
   useEffect(() => {
-    fetchRecipes();
+    const fetchUserRecipes = async () => {
+      try {
+        const response = await api.get('/api/recipes/user');
+        setRecipes(response.data);
+      } catch (error) {
+        console.error('Error fetching user recipes:', error);
+      }
+    };
+    fetchUserRecipes();
   }, []);
 
   const fetchRecipes = async () => {
@@ -45,56 +37,14 @@ const UserRecipes = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    const submittedRecipe = {
-      ...newRecipe,
-      rating: parseFloat(newRecipe.rating) || 0,
-    };
-
-    if (editingRecipe) {
-      try {
-        const response = await fetch(`http://localhost:3001/recipes/${editingRecipe.id}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(submittedRecipe),
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to update recipe');
-        }
-
-        const updatedRecipe = await response.json();
-        setRecipes((prevRecipes) =>
-          prevRecipes.map((recipe) =>
-            recipe.id === editingRecipe.id ? updatedRecipe : recipe
-          )
-        );
-        setEditingRecipe(null);
-      } catch (error) {
-        console.error('Error updating recipe:', error);
-      }
-    } else {
-      try {
-        const response = await fetch('http://localhost:3001/recipes', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(submittedRecipe),
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to add recipe');
-        }
-
-        const addedRecipe = await response.json();
-        setRecipes((prevRecipes) => [...prevRecipes, addedRecipe]);
-      } catch (error) {
-        console.error('Error adding recipe:', error);
-      }
+    try {
+      const response = await api.post('/recipes', newRecipe);
+      setRecipes([...recipes, response.data]);
+      // ... reset form and close modal
+    } catch (error) {
+      console.error('Error creating recipe:', error);
     }
+  };
 
     setNewRecipe({
       chefImage: '',
@@ -290,6 +240,5 @@ const UserRecipes = () => {
       </div>
     </div>
   );
-};
 
 export default UserRecipes;

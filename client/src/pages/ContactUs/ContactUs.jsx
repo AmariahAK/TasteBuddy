@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import api from '../api'
 import {
   FaPhoneAlt,
   FaEnvelope,
@@ -47,18 +48,8 @@ const ContactUs = () => {
     };
     console.log(`This is state 3 :${newFormData}`);
     try {
-      // Send POST request to the server
-      await fetch("http://localhost:8080/contact", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(newFormData),
-      })
-        .then((r) => r.json())
-        .then((data) => {
-          () => setSubmitMessage(data);
-        });
+      const response = await api.post('/api/contact', newFormData);
+      setSubmitMessage(response.data.message);
 
       // Set submission status and reset form
       setIsSubmitted(true);

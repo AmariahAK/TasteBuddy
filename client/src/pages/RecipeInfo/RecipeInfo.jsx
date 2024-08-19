@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
+import api from '../api';
 import {
   FaClock,
   FaUtensils,
@@ -11,34 +12,16 @@ import {
 const RecipeInfo = () => {
   const { recipeId } = useParams();
   const [recipe, setRecipe] = useState(null);
-  const [rating, setRating] = useState(4.5);
-  const [isBookmarked, setIsBookmarked] = useState(false);
-  const [comment, setComment] = useState("");
-  const [comments, setComments] = useState([
-    {
-      author: "John Doe",
-      text: "Great recipe! I loved how easy it was to follow.",
-    },
-    {
-      author: "Jane Smith",
-      text: "Delicious! I added some extra herbs and it turned out amazing.",
-    },
-  ]);
 
   useEffect(() => {
-    // Fetch the recipe data based on the recipeId
     const fetchRecipe = async () => {
       try {
-        const response = await fetch(
-          `http://localhost:3001/recipes/${recipeId}`
-        );
-        const data = await response.json();
-        setRecipe(data);
+        const response = await api.get(`/api/recipes/${recipeId}`);
+        setRecipe(response.data);
       } catch (error) {
-        console.error("Error fetching recipe:", error);
+        console.error('Error fetching recipe:', error);
       }
     };
-
     fetchRecipe();
   }, [recipeId]);
 

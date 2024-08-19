@@ -4,12 +4,7 @@ import { MdOutlineMailOutline } from "react-icons/md";
 import { VscLockSmall } from "react-icons/vsc";
 import { TbEyeClosed } from "react-icons/tb";
 import { RiEyeCloseFill } from "react-icons/ri";
-import { auth } from "../../../firebase"; // Import auth from your firebase.js
-import {
-  createUserWithEmailAndPassword,
-  sendEmailVerification,
-} from "firebase/auth"; // Import Firebase methods
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const SignUp = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -21,8 +16,8 @@ const SignUp = () => {
   const [error, setError] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const [emailError, setEmailError] = useState("");
-  const [showSuccessAlert, setShowSuccessAlert] = useState(false); // New state for alert visibility
-  const [verificationEmailSent, setVerificationEmailSent] = useState(false); // New state for email verification status
+  const [showSuccessAlert, setShowSuccessAlert] = useState(false);
+  const navigate = useNavigate();
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
@@ -42,7 +37,6 @@ const SignUp = () => {
     setError("");
     setPasswordError("");
     setEmailError("");
-    setVerificationEmailSent(false);
   };
 
   const handleSignUp = async () => {
@@ -61,27 +55,30 @@ const SignUp = () => {
     }
 
     try {
-      const userCredential = await createUserWithEmailAndPassword(
-        auth,
-        email,
-        password
-      );
-      const user = userCredential.user;
+      const response = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password, username }),
+      });
 
-      // Send email verification
-      await sendEmailVerification(user);
-
-      // User successfully signed up and verification email sent
-      setShowSuccessAlert(true); // Show success alert
-      setVerificationEmailSent(true); // Indicate email verification sent
-      resetForm(); // Clear form fields
-      console.log("User signed up successfully and verification email sent");
-    } catch (error) {
-      if (error.code === "auth/email-already-in-use") {
-        setEmailError("The email address is already in use proceed to login");
+      if (response.ok) {
+        setShowSuccessAlert(true);
+        resetForm();
+        setTimeout(() => {
+          navigate('/login');
+        }, 3000);
       } else {
-        setError(error.message);
+        const data = await response.json();
+        if (data.message.includes("Email already registered")) {
+          setEmailError("The email address is already in use. Please proceed to login.");
+        } else {
+          setError(data.message);
+        }
       }
+    } catch (error) {
+      setError("An error occurred during sign up. Please try again.");
     }
   };
 
@@ -106,9 +103,7 @@ const SignUp = () => {
           <div className="self-center ml-3">
             <span className="text-green-600 font-semibold">Success</span>
             <p className="text-green-600 mt-1">
-              {verificationEmailSent
-                ? "Account has been created successfully. Please check your email to verify your account."
-                : "Account has been created successfully."}
+              Account has been created successfully. Please check your email to verify your account.
             </p>
           </div>
         </div>
@@ -135,7 +130,7 @@ const SignUp = () => {
 
   return (
     <div className="flex min-h-screen items-center font-urbanist justify-center bg-gray-200 relative">
-      {showSuccessAlert && <SuccessAlert />} {/* Render the success alert */}
+      {showSuccessAlert && <SuccessAlert />}
       <div className="bg-gray-100 p-8 rounded-lg max-w-4xl w-full flex flex-col md:flex-row">
         <div className="md:w-1/2 p-6">
           <h2 className="text-4xl font-semibold text-green-800 text-center mb-24">

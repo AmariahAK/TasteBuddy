@@ -4,8 +4,6 @@ import { RiEyeCloseFill } from "react-icons/ri";
 import { MdOutlineMailOutline } from "react-icons/md";
 import { VscLockSmall } from "react-icons/vsc";
 import { Link, useNavigate } from "react-router-dom";
-import { signInWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
-import { auth } from '../../../firebase'; // Import the Firebase auth instance
 
 const LogIn = () => {
   const [email, setEmail] = useState('');
@@ -32,29 +30,25 @@ const LogIn = () => {
     setSuccess('');
 
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
 
-      if (!user.emailVerified) {
-        setError("Your email is not verified. Please check your inbox and verify your email before logging in.");
-        return;
-      }
-
-      // User is signed in and email is verified
-      resetForm(); // Clear form fields and reset states
-      navigate('/recipes'); // Redirect to a dashboard or homepage after login
-    } catch (error) {
-      if (error.code === 'auth/invalid-credential') {
-        setError("Invalid credentials. Please try again. If you have forgotten your password, you can reset it.");
-      } else if (error.code === 'auth/user-not-found') {
-        setError("No account found with this email. Please check your email or sign up for an account.");
-      } else if (error.code === 'auth/too-many-requests') {
-        setError("You have made too many failed login attempts. Please try again later or reset your password.");
-      } else if (error.code === 'auth/missing-password') {
-        setError("Please input password.");
+      if (response.ok) {
+        const data = await response.json();
+        localStorage.setItem('token', data.access_token);
+        resetForm();
+        navigate('/recipes');
       } else {
-        setError(error.message);
+        const data = await response.json();
+        setError(data.message || "Invalid email or password");
       }
+    } catch (error) {
+      setError("An error occurred during login. Please try again.");
     }
   };
 
@@ -62,15 +56,28 @@ const LogIn = () => {
     setError('');
     setSuccess('');
 
+    if (!email) {
+      setError("Please enter your email address.");
+      return;
+    }
+
     try {
-      await sendPasswordResetEmail(auth, email);
-      setSuccess("Password reset email sent. Please check your inbox.");
-    } catch (error) {
-      if (error.code === 'auth/user-not-found') {
-        setError("No account found with this email.");
+      const response = await fetch('/api/auth/reset-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      if (response.ok) {
+        setSuccess("Password reset instructions sent to your email.");
       } else {
-        setError(error.message);
+        const data = await response.json();
+        setError(data.message || "Failed to send reset instructions.");
       }
+    } catch (error) {
+      setError("An error occurred. Please try again.");
     }
   };
 
@@ -169,14 +176,13 @@ const LogIn = () => {
 
           {/* Sign-Up Link */}
           <p className="text-center font-semibold">
-            Don’t have an account? <Link to='/signUp' className="text-green-800">Sign up</Link>
+            Don't have an account? <Link to='/signUp' className="text-green-800">Sign up</Link>
           </p>
 
         </div>
       </div>
     </div>
     </>
-
   );
 };
 

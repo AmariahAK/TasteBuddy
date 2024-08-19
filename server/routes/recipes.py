@@ -80,3 +80,9 @@ def get_user_recipes():
     current_user_id = get_jwt_identity()
     user_recipes = Recipe.query.filter_by(userId=current_user_id).all()
     return jsonify(recipes_schema.dump(user_recipes)), 200
+
+@recipes.route("/featured", methods=["GET"])
+def get_featured_recipes():
+    featured_recipes = Recipe.query.filter_by(featured=True).limit(5).all()
+    return jsonify(recipes_schema.dump(featured_recipes)), 200
+

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import api from '../api';
 
 import { FaXTwitter } from "react-icons/fa6";
 import {
@@ -24,29 +25,19 @@ const dietType = [
 ];
 
 const ExploreRecipes = () => {
-  // Set the states for diet types, country, recipes, searchTerm and bookmarks
-  const [selectedDietType, setSelectedDietType] = useState("All");
-  const [selectedCountry, setSelectedCountry] = useState("All");
   const [recipes, setRecipes] = useState([]);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [bookmarkedRecipes, setBookmarkedRecipes] = useState([]);
 
-  // Declare an URL variable for the db.json file
-  const URL = "http://127.0.0.1:5555/recipes";
-
-  // Fetch the recipes from the db.json file
   useEffect(() => {
-    fetch(`${URL}`)
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error("Network response was not ok");
-        }
-        return response.json();
-      })
-      .then((data) => setRecipes(data))
-      .catch((error) => console.error("Error fetching recipes:", error));
+    const fetchRecipes = async () => {
+      try {
+        const response = await api.get('/api/recipes');
+        setRecipes(response.data);
+      } catch (error) {
+        console.error('Error fetching recipes:', error);
+      }
+    };
+    fetchRecipes();
   }, []);
-  console.log(recipes);
 
   // Filter the recipes based on the selected diet type, country, and search term
   const filteredRecipes = recipes.filter(
