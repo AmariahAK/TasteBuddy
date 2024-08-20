@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from models import db, Recipe, User, Bookmark
+from models import db, Recipe, User, Bookmark, Comment
 from schema.schema import RecipeSchema, CommentSchema
 
 recipes = Blueprint('recipes', __name__)
@@ -21,7 +21,11 @@ def get_recipes():
 @recipes.route("/<int:id>", methods=["GET"])
 def get_recipe(id):
     recipe = Recipe.query.get_or_404(id)
-    return jsonify(recipe_schema.dump(recipe)), 200
+    recipe_comments = Comment.query.filter_by(recipeId=id).all()
+    recipe_data = recipe_schema.dump(recipe)
+    comments_schema = CommentSchema(many=True)
+    recipe_data['comments'] = comments_schema.dump(recipe_comments)
+    return jsonify(recipe_data), 200
 
 @recipes.route("", methods=["POST"])
 @jwt_required()
@@ -114,7 +118,8 @@ def add_comment(id):
     current_user = User.query.get(get_jwt_identity())
     data = request.get_json()
     comment = recipe.add_comment(current_user, data['content'])
-    return jsonify(CommentSchema.dump(comment)), 201
+    comment_schema = CommentSchema() 
+    return jsonify(comment_schema.dump(comment)), 201 
 
 @recipes.route("/bookmarked", methods=["GET"])
 @jwt_required()
