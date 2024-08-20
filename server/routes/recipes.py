@@ -18,8 +18,6 @@ def get_recipes():
         recipes = Recipe.query.all()
     return jsonify(recipes_schema.dump(recipes)), 200
 
-
-
 @recipes.route("/<int:id>", methods=["GET"])
 def get_recipe(id):
     recipe = Recipe.query.get_or_404(id)

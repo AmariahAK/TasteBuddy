@@ -49,6 +49,7 @@ def admin_required(fn):
         return fn(*args, **kwargs)
     return wrapper
 
+
 @admin.route('/users', methods=['GET'])
 @admin_required
 def get_all_users():
