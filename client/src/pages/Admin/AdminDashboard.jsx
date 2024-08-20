@@ -1,82 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import styled from 'styled-components';
 import api from '../../api';
-
-const DashboardContainer = styled.div`
-  padding: 2rem;
-  background-color: #e8f5e9;
-  min-height: 100vh;
-`;
-
-const Header = styled.header`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2rem;
-`;
-
-const Title = styled.h1`
-  color: #2e7d32;
-`;
-
-const LogoutButton = styled.button`
-  background-color: #4caf50;
-  color: white;
-  padding: 0.5rem 1rem;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background-color 0.3s;
-  &:hover {
-    background-color: #2e7d32;
-  }
-`;
-
-const Section = styled.section`
-  background-color: white;
-  padding: 1rem;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  margin-bottom: 2rem;
-`;
-
-const SectionTitle = styled.h2`
-  color: #4caf50;
-  margin-bottom: 1rem;
-`;
-
-const List = styled.ul`
-  list-style-type: none;
-  padding: 0;
-`;
-
-const ListItem = styled.li`
-  padding: 0.5rem 0;
-  border-bottom: 1px solid #e0e0e0;
-  &:last-child {
-    border-bottom: none;
-  }
-`;
-
-const DeleteButton = styled.button`
-  background-color: #f44336;
-  color: white;
-  padding: 0.25rem 0.5rem;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  margin-left: 1rem;
-  &:hover {
-    background-color: #d32f2f;
-  }
-`;
-
-const LoadingMessage = styled.p`
-  text-align: center;
-  color: #4caf50;
-  font-size: 1.2rem;
-`;
 
 const AdminDashboard = () => {
   const [users, setUsers] = useState([]);
@@ -134,51 +58,73 @@ const AdminDashboard = () => {
   };
 
   if (isLoading) {
-    return <LoadingMessage>Loading...</LoadingMessage>;
+    return (
+      <div className="flex items-center justify-center h-screen bg-backgroundGreen">
+        <div className="text-2xl font-semibold text-customGreen">Loading...</div>
+      </div>
+    );
   }
 
   return (
-    <DashboardContainer>
-      <Header>
-        <Title>Admin Dashboard</Title>
-        <LogoutButton onClick={handleLogout}>Logout</LogoutButton>
-      </Header>
+    <div className="min-h-screen bg-backgroundGreen font-urbanist">
+      <header className="bg-customGreen text-white p-4 shadow-md">
+        <div className="container mx-auto flex justify-between items-center">
+          <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+          <button
+            onClick={handleLogout}
+            className="bg-white text-customGreen px-4 py-2 rounded-md hover:bg-gray-100 transition duration-300"
+          >
+            Logout
+          </button>
+        </div>
+      </header>
 
-      <Section>
-        <SectionTitle>Statistics</SectionTitle>
-        <pre>{JSON.stringify(statistics, null, 2)}</pre>
-      </Section>
+      <main className="container mx-auto mt-8 px-4">
+        <section className="bg-white rounded-lg shadow-md p-6 mb-8">
+          <h2 className="text-2xl font-semibold mb-4 text-customGreen">Statistics</h2>
+          <pre className="bg-gray-100 p-4 rounded-md overflow-x-auto">
+            {JSON.stringify(statistics, null, 2)}
+          </pre>
+        </section>
 
-      <Section>
-        <SectionTitle>Users</SectionTitle>
-        <List>
-          {Array.isArray(users) && users.map(user => (
-            <ListItem key={user.id}>{user.email}</ListItem>
-          ))}
-        </List>
-      </Section>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <section className="bg-white rounded-lg shadow-md p-6">
+            <h2 className="text-2xl font-semibold mb-4 text-customGreen">Users</h2>
+            <ul className="space-y-2">
+              {Array.isArray(users) && users.map(user => (
+                <li key={user.id} className="bg-gray-100 p-2 rounded-md">{user.email}</li>
+              ))}
+            </ul>
+          </section>
 
-      <Section>
-        <SectionTitle>Recipes</SectionTitle>
-        <List>
-          {Array.isArray(recipes) && recipes.map(recipe => (
-            <ListItem key={recipe.id}>{recipe.title}</ListItem>
-          ))}
-        </List>
-      </Section>
+          <section className="bg-white rounded-lg shadow-md p-6">
+            <h2 className="text-2xl font-semibold mb-4 text-customGreen">Recipes</h2>
+            <ul className="space-y-2">
+              {Array.isArray(recipes) && recipes.map(recipe => (
+                <li key={recipe.id} className="bg-gray-100 p-2 rounded-md">{recipe.title}</li>
+              ))}
+            </ul>
+          </section>
 
-      <Section>
-        <SectionTitle>Comments</SectionTitle>
-        <List>
-          {Array.isArray(comments) && comments.map(comment => (
-            <ListItem key={comment.id}>
-              {comment.content}
-              <DeleteButton onClick={() => handleDeleteComment(comment.id)}>Delete</DeleteButton>
-            </ListItem>
-          ))}
-        </List>
-      </Section>
-    </DashboardContainer>
+          <section className="bg-white rounded-lg shadow-md p-6">
+            <h2 className="text-2xl font-semibold mb-4 text-customGreen">Comments</h2>
+            <ul className="space-y-2">
+              {Array.isArray(comments) && comments.map(comment => (
+                <li key={comment.id} className="bg-gray-100 p-2 rounded-md flex justify-between items-center">
+                  <span>{comment.content}</span>
+                  <button
+                    onClick={() => handleDeleteComment(comment.id)}
+                    className="bg-red-500 text-white px-2 py-1 rounded-md hover:bg-red-600 transition duration-300"
+                  >
+                    Delete
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </section>
+        </div>
+      </main>
+    </div>
   );
 };
 
